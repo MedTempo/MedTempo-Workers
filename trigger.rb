@@ -3,6 +3,7 @@ require "bunny"
 require "json"
 require "securerandom"
 
+require "./config/redis"
 require "./config/worker-queue"
 require "./config/mail-server"
 require "./config/template-parse"
@@ -14,7 +15,11 @@ begin
       props = JSON.parse(body)
 
       if props["for"] == "verification-code"
-        verify_code = SecureRandom.alphanumeric
+        verify_code = SecureRandom.random_number(99999).to_s.rjust(5, "0")
+        @redis.set(props["to"], verify_code)
+        @redis.expire(props["to"], (15 * 60))
+
+        puts @redis.get(props["to"])
         rendered = @templates["verification-code"].render({ "vcode" => verify_code, "person" => props["name"] }, { strict_variables: true })
         puts rendered
       end
@@ -22,7 +27,6 @@ begin
       puts props
 
       Mail.deliver do
-#          header["Content-Type"] = "text/html"
           from     "medtempo2023@gmail.com"
           to       "#{props["to"]}"
           subject  "#{props["for"]}"

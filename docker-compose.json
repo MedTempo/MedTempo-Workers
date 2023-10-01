@@ -1,0 +1,23 @@
+{
+    "version": "2.21.0",
+
+    "services": {
+        "workers": {
+            "build": {
+                "context": ".", 
+                "dockerfile": "Dockerfile",
+                "target": "dev"
+            },
+            "network_mode": "host",
+
+            "deploy": {
+                "mode": "replicated",
+                "replicas": 3
+            },
+
+            "env_file": [
+                ".env"
+            ]
+        }
+    }
+}
